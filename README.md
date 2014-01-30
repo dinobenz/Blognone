@@ -5,7 +5,7 @@ Blognone reader client.
 
 Usage
 ==============
-1. Configuration feed uri in application setting file.
+Configuration feed uri in application setting file.
 ```
 <configuration>
   <appSettings>
@@ -14,12 +14,12 @@ Usage
 </configuration>
 ```
 
-2. Create new client.
+Create new client.
 ```
 var client = new BlognoneClient();
 ```
 
-3. Call GetFeed method.
+Call GetFeed method.
 ```
 var channel = client.Get();
 ```
