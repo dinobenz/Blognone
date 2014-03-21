@@ -12,6 +12,12 @@ namespace Dinobenz.Blognone
     /// </summary>
     public class BlognoneClient
     {
+        #region Declarations
+
+        private const string xmlNamespace = "http://purl.org/dc/elements/1.1/";
+
+        #endregion
+
         #region Properties
 
         /// <summary>
@@ -42,10 +48,10 @@ namespace Dinobenz.Blognone
         #region Methods
 
         /// <summary>
-        /// Gets the feed.
+        /// Gets the content feed.
         /// </summary>
         /// <returns>The channel</returns>
-        public Channel Get()
+        public Channel GetContent()
         {
             byte[] buffer = null;
             string xml = string.Empty;
@@ -97,7 +103,7 @@ namespace Dinobenz.Blognone
 
                         // add namespace
                         XmlNamespaceManager namespaces = new XmlNamespaceManager(xmlDocument.NameTable);
-                        namespaces.AddNamespace("dc", "http://purl.org/dc/elements/1.1/");
+                        namespaces.AddNamespace("dc", xmlNamespace);
 
                         item.Creator = nodes[i].SelectSingleNode("dc:creator", namespaces).InnerText;
 
@@ -118,6 +124,82 @@ namespace Dinobenz.Blognone
                         }
 
                         item.Categories = categories.Count > 0 ? categories.ToArray() : null;
+                        items.Add(item);
+                    }
+                }
+
+                channel.Items = items.Count > 0 ? items.ToArray() : null;
+            }
+
+            return channel;
+        }
+
+        /// <summary>
+        /// Gets the comment feed.
+        /// </summary>
+        /// <returns>The channel</returns>
+        public Channel GetComment()
+        {
+            byte[] buffer = null;
+            string xml = string.Empty;
+            Channel channel = null;
+            List<Item> items = null;
+
+            // download feed
+            using (WebClient webClient = new WebClient())
+            {
+                buffer = webClient.DownloadData(this.CommentUri);
+                xml = Encoding.UTF8.GetString(buffer);
+                webClient.Dispose();
+            }
+
+            // mapping data
+            if (!string.IsNullOrEmpty(xml))
+            {
+                // load xml
+                XmlDocument xmlDocument = new XmlDocument();
+                xmlDocument.LoadXml(xml);
+
+                // channel
+                channel = new Channel();
+                channel.Title = xmlDocument.SelectSingleNode("/rss/channel/title").InnerText;
+                channel.Link = xmlDocument.SelectSingleNode("/rss/channel/link").InnerText;
+                channel.Description = xmlDocument.SelectSingleNode("/rss/channel/description").InnerText;
+                channel.Language = xmlDocument.SelectSingleNode("/rss/channel/language").InnerText;
+
+                // items
+                XmlNodeList nodes = xmlDocument.SelectNodes("/rss/channel/item");
+                if (nodes.Count > 0)
+                {
+                    items = new List<Item>();
+
+                    for (int i = 0; i < nodes.Count; i++)
+                    {
+                        // item
+                        Item item = new Item();
+                        item.Title = nodes[i].SelectSingleNode("title").InnerText;
+                        item.Link = nodes[i].SelectSingleNode("link").InnerText;
+                        item.Description = nodes[i].SelectSingleNode("description").InnerText;
+                        item.PublishDate = Convert.ToDateTime(nodes[i].SelectSingleNode("pubDate").InnerText);
+
+                        // find link id
+                        Uri uri = new Uri(item.Link);
+                        if (!string.IsNullOrEmpty(uri.Fragment))
+                        {
+                            // #comment-689534
+                            if (uri.Fragment.Contains("-"))
+                            {
+                                string[] tmp = uri.Fragment.Split('-');
+                                item.ID = Convert.ToInt32(tmp[1]);
+                            }
+                        }
+
+                        // add namespace
+                        XmlNamespaceManager namespaces = new XmlNamespaceManager(xmlDocument.NameTable);
+                        namespaces.AddNamespace("dc", xmlNamespace);
+
+                        item.Creator = nodes[i].SelectSingleNode("dc:creator", namespaces).InnerText;
+
                         items.Add(item);
                     }
                 }

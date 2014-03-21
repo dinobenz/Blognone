@@ -50,12 +50,12 @@ namespace Dinobenz.Blognone.Tests
         }
 
         /// <summary>
-        /// Get feed.
+        /// Get content feed.
         /// </summary>
         [TestMethod]
-        public void Get_Feed()
+        public void Get_Content_Feed()
         {
-            Channel channel = this.client.Get();
+            Channel channel = this.client.GetContent();
 
             Assert.IsNotNull(channel);
             
@@ -80,6 +80,33 @@ namespace Dinobenz.Blognone.Tests
                     Assert.IsNotNull(category.Domain);
                     Assert.IsNotNull(category.Name);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Get commend feed.
+        /// </summary>
+        [TestMethod]
+        public void Get_Commend_Feed()
+        {
+            Channel channel = this.client.GetComment();
+
+            Assert.IsNotNull(channel);
+
+            Assert.IsNotNull(channel.Title);
+            Assert.IsNotNull(channel.Link);
+            Assert.IsNotNull(channel.Description);
+            Assert.IsNotNull(channel.Language);
+
+            Assert.IsNotNull(channel.Items);
+            foreach (var item in channel.Items)
+            {
+                Assert.IsNotNull(item.ID);
+                Assert.IsNotNull(item.Title);
+                Assert.IsNotNull(item.Link);
+                Assert.IsNotNull(item.Description);
+                Assert.IsNotNull(item.PublishDate);
+                Assert.IsNotNull(item.Creator);
             }
         }
     }
